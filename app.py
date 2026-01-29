@@ -43,14 +43,15 @@ def processar_texto_multiplas_categorias(texto, nome_arquivo):
    return registros
 
 # --- INTERFACE VISUAL ---
-st.title("🛡️ Codificador de Instrumentos")
-st.write("Selecione os arquivos PDF para processamento em lote e geração de estatísticas.")
+st.title("Codificador de Instrumentos")
+st.write("Selecione os arquivos PDF para codificar os instrumentos de acordo com a classe (substantivo ou procedimental) e o tipo (nodalidade, autoridade, tesouro ou organização).")
+st.write("Ferramenta desenvolvida pelo Grupo de Estudos em Desenho de Políticas Públicas com o apoio do Instituto Nacional de Ciência e Tecnologia Qualidade de Governo e Políticas para o Desenvolvmento Sustentável (QualiGov)")
 
 # Seletor de arquivos
 uploaded_files = st.file_uploader("Suba seus arquivos PDF aqui", type="pdf", accept_multiple_files=True)
 
 if uploaded_files:
-   if st.button("🚀 Iniciar Análise"):
+   if st.button("Iniciar Análise"):
        resultados_gerais = []
       
        # Barra de progresso visual
@@ -78,11 +79,11 @@ if uploaded_files:
            st.success(f"✅ Análise concluída! {len(df)} termos identificados no total.")
 
            # --- CÁLCULO DAS ESTATÍSTICAS ---
-           # 1. Contagem por Condição (Substantivo vs Procedimental)
+           # 1. Contagem por Classe (Substantivo vs Procedimental)
            resumo_condicao = df['Condição'].value_counts().reset_index()
            resumo_condicao.columns = ['Condição', 'Total']
 
-           # 2. Contagem por Categoria (Nodalidade, Autoridade, Tesouro, Organização)
+           # 2. Contagem por Tipo (Nodalidade, Autoridade, Tesouro, Organização)
            resumo_categoria = df['Categoria'].value_counts().reset_index()
            resumo_categoria.columns = ['Tipo (Categoria)', 'Total']
 
@@ -93,15 +94,15 @@ if uploaded_files:
            col1, col2, col3 = st.columns(3)
 
            with col1:
-               st.subheader("📌 Por Condição")
+               st.subheader("Por Classe")
                st.dataframe(resumo_condicao, use_container_width=True, hide_index=True)
 
            with col2:
-               st.subheader("🏷️ Por Tipo")
+               st.subheader("Por Tipo")
                st.dataframe(resumo_categoria, use_container_width=True, hide_index=True)
 
            with col3:
-               st.subheader("🔄 Cruzamento")
+               st.subheader("Cruzamento")
                st.dataframe(resumo_cruzado, use_container_width=True, hide_index=True)
 
            # --- DOWNLOAD DO EXCEL ---
@@ -127,3 +128,4 @@ if uploaded_files:
                st.write(df)
        else:
            st.warning("Nenhum termo dos critérios foi encontrado nos arquivos enviados.")
+
