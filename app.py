@@ -46,7 +46,8 @@ def processar_texto_multiplas_categorias(texto, nome_arquivo):
 st.title("Codificador de Instrumentos")
 st.write("Selecione os arquivos PDF para codificar os instrumentos de acordo com a classe (substantivo ou procedimental) e o tipo (nodalidade, autoridade, tesouro ou organização).")
 st.write("Ferramenta desenvolvida pelo Projeto Estruturante 4 - Entendendo as políticas públicas de forma abrangente e comparável: proposta de automatização da avaliação dos elementos do desenho de políticas do Instituto Nacional de Ciência e Tecnologia Qualidade de Governo e Políticas para o Desenvolvmento Sustentável (QualiGov).")
-st.write("Desenvolvido por: Rafael Barbosa de Aguiar")
+st.write("Desenvolvido por: Dr. Rafael Barbosa de Aguiar")
+st.write("Validação das condições por: Dra. Luciana Leite Lima e Dr. Lizandro Lui")
 
 # Seletor de arquivos
 uploaded_files = st.file_uploader("Suba seus arquivos PDF aqui", type="pdf", accept_multiple_files=True)
@@ -81,15 +82,15 @@ if uploaded_files:
 
            # --- CÁLCULO DAS ESTATÍSTICAS ---
            # 1. Contagem por Classe (Substantivo vs Procedimental)
-           resumo_condicao = df['Condição'].value_counts().reset_index()
-           resumo_condicao.columns = ['Condição', 'Total']
+           resumo_condicao = df['Classe'].value_counts().reset_index()
+           resumo_condicao.columns = ['Classe', 'Total']
 
            # 2. Contagem por Tipo (Nodalidade, Autoridade, Tesouro, Organização)
            resumo_categoria = df['Categoria'].value_counts().reset_index()
            resumo_categoria.columns = ['Tipo (Categoria)', 'Total']
 
            # 3. Contagem Cruzada (Matriz Condição x Categoria)
-           resumo_cruzado = df.groupby(['Condição', 'Categoria']).size().reset_index(name='Quantidade')
+           resumo_cruzado = df.groupby(['Classe', 'Categoria']).size().reset_index(name='Quantidade')
 
            # --- EXIBIÇÃO NA TELA EM COLUNAS ---
            col1, col2, col3 = st.columns(3)
@@ -129,5 +130,6 @@ if uploaded_files:
                st.write(df)
        else:
            st.warning("Nenhum termo dos critérios foi encontrado nos arquivos enviados.")
+
 
 
