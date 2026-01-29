@@ -49,6 +49,7 @@ st.write("Ferramenta desenvolvida pelo Projeto Estruturante 4 - Entendendo as po
 st.write("Desenvolvido por: Dr. Rafael Barbosa de Aguiar")
 st.write("Validação das condições por: Dra. Luciana Leite Lima e Dr. Lizandro Lui")
 
+
 # Seletor de arquivos
 uploaded_files = st.file_uploader("Suba seus arquivos PDF aqui", type="pdf", accept_multiple_files=True)
 
@@ -81,16 +82,16 @@ if uploaded_files:
            st.success(f"✅ Análise concluída! {len(df)} termos identificados no total.")
 
            # --- CÁLCULO DAS ESTATÍSTICAS ---
-           # 1. Contagem por Classe (Substantivo vs Procedimental)
-           resumo_condicao = df['Classe'].value_counts().reset_index()
-           resumo_condicao.columns = ['Classe', 'Total']
+           # 1. Contagem por Condição (Substantivo vs Procedimental)
+           resumo_condicao = df['Condição'].value_counts().reset_index()
+           resumo_condicao.columns = ['Condição', 'Total']
 
-           # 2. Contagem por Tipo (Nodalidade, Autoridade, Tesouro, Organização)
+           # 2. Contagem por Categoria (Nodalidade, Autoridade, Tesouro, Organização)
            resumo_categoria = df['Categoria'].value_counts().reset_index()
            resumo_categoria.columns = ['Tipo (Categoria)', 'Total']
 
            # 3. Contagem Cruzada (Matriz Condição x Categoria)
-           resumo_cruzado = df.groupby(['Classe', 'Categoria']).size().reset_index(name='Quantidade')
+           resumo_cruzado = df.groupby(['Condição', 'Categoria']).size().reset_index(name='Quantidade')
 
            # --- EXIBIÇÃO NA TELA EM COLUNAS ---
            col1, col2, col3 = st.columns(3)
@@ -130,6 +131,3 @@ if uploaded_files:
                st.write(df)
        else:
            st.warning("Nenhum termo dos critérios foi encontrado nos arquivos enviados.")
-
-
-
