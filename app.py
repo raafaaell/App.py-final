@@ -45,7 +45,7 @@ def processar_texto_multiplas_categorias(texto, nome_arquivo):
 # --- INTERFACE VISUAL ---
 st.title("Codificador de Instrumentos")
 st.write("Selecione os arquivos PDF para codificar os instrumentos de acordo com a classe (substantivo ou procedimental) e o tipo (nodalidade, autoridade, tesouro ou organização).")
-st.write("Ferramenta desenvolvida pelo Projeto Estruturante 4 - Entendendo as políticas públicas de forma abrangente e comparável: proposta de automatização da avaliação dos elementos do desenho de políticas do Instituto Nacional de Ciência e Tecnologia Qualidade de Governo e Políticas para o Desenvolvmento Sustentável (QualiGov).")
+st.write("Ferramenta desenvolvida pelo Projeto Estruturante 4 - Entendendo as políticas públicas de forma abrangente e comparável: proposta de automatização da avaliação dos elementos do desenho de políticas do Instituto Nacional de Ciência e Tecnologia Qualidade de Governo e Políticas para o Desenvolvimento Sustentável (QualiGov).")
 st.write("Desenvolvido por: Dr. Rafael Barbosa de Aguiar")
 st.write("Validação das condições por: Dra. Luciana Leite Lima e Dr. Lizandro Lui")
 
@@ -131,3 +131,4 @@ if uploaded_files:
                st.write(df)
        else:
            st.warning("Nenhum termo dos critérios foi encontrado nos arquivos enviados.")
+
