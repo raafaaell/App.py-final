@@ -14,7 +14,7 @@ st.set_page_config(page_title="Codificador de Instrumentos", layout="wide")
 
 def processar_texto_multiplas_categorias(paginas, nome_arquivo):
    """Procura cada termo página a página, como palavra inteira e no singular ou plural.
-   O termo conta uma vez por arquivo, com a lista das páginas em que aparece."""
+   Cada termo gera uma linha por arquivo, com o total de ocorrências e as páginas em que aparece."""
    # Normaliza quebras de linha e espaços do PDF para que termos longos sejam encontrados
    paginas = [re.sub(r"\s+", " ", texto).lower() for texto in paginas]
    registros = []
@@ -28,18 +28,20 @@ def processar_texto_multiplas_categorias(paginas, nome_arquivo):
 
        for palavra in palavras:
            padrao = padrao_termo(palavra)
-           paginas_com_termo, formas_encontradas = [], set()
+           paginas_com_termo, formas_encontradas, contagem = [], set(), 0
            for num, texto in enumerate(paginas, start=1):
-               achados = {m.group(0) for m in padrao.finditer(texto)}
+               achados = [m.group(0) for m in padrao.finditer(texto)]
                if achados:
                    paginas_com_termo.append(num)
-                   formas_encontradas |= achados
+                   formas_encontradas.update(achados)
+                   contagem += len(achados)
            if paginas_com_termo:
                registros.append({
                    "Arquivo": nome_arquivo,
                    "Condição": condicao.capitalize(),  
                    "Categoria": subcategoria.capitalize(),
                    "Termo Encontrado": palavra,
+                   "Contagem": contagem,
                    "Páginas": ", ".join(str(num) for num in paginas_com_termo),
                    "Formas Encontradas": ", ".join(sorted(formas_encontradas))
                })
