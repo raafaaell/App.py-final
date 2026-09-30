@@ -434,13 +434,91 @@ def generalizar_estados(termo):
     return antes.strip() or termo
 
 
+# --- SINGULAR E PLURAL ---
+# Cada palavra do termo é buscada como palavra inteira (não dentro de outras palavras)
+# e aceita singular e plural: "lei" encontra "lei" e "leis", mas não "eleição".
+# Termos que só diferem no número ("Licitação sustentável" / "Licitações Sustentáveis")
+# são tratados como um único termo.
+PALAVRAS_INVARIAVEIS = {
+    "e", "de", "em", "com", "por", "para", "sobre", "ou", "que", "como", "não", "bem",
+    "tanto", "quanto", "mediante", "se", "sem", "entre", "até", "após",
+}
+
+
+def singular(palavra):
+    """Forma singular aproximada de uma palavra em português (minúscula)."""
+    if palavra in PALAVRAS_INVARIAVEIS or len(palavra) < 2:
+        return palavra
+    for fim, troca in (("ões", "ão"), ("ães", "ão"), ("ãos", "ão"), ("veis", "vel"),
+                       ("éis", "el"), ("ais", "al"), ("óis", "ol"), ("ns", "m"),
+                       ("res", "r"), ("zes", "z"), ("ses", "s")):
+        if palavra.endswith(fim) and len(palavra) > len(fim):
+            return palavra[:-len(fim)] + troca
+    if palavra[-1] == "s" and palavra[-2] in "aeiouà":
+        return palavra[:-1]
+    return palavra
+
+
+def variacoes(palavra):
+    """Conjunto com a palavra, seu singular e seu(s) plural(is)."""
+    palavra = palavra.lower()
+    sing = singular(palavra)
+    formas = {palavra, sing}
+    if sing in PALAVRAS_INVARIAVEIS:
+        return formas
+    if sing.endswith("ão"):
+        formas |= {sing[:-2] + fim for fim in ("ões", "ães", "ãos")}
+    elif sing.endswith("m"):
+        formas.add(sing[:-1] + "ns")
+    elif sing.endswith("vel"):
+        formas.add(sing[:-2] + "eis")
+    elif sing.endswith("el"):
+        formas |= {sing[:-2] + "éis", sing[:-2] + "eis"}
+    elif sing.endswith("al"):
+        formas.add(sing[:-1] + "is")
+    elif sing.endswith("ol"):
+        formas.add(sing[:-2] + "óis")
+    elif sing.endswith("ul"):
+        formas.add(sing[:-1] + "is")
+    elif sing.endswith("il"):
+        formas |= {sing[:-1] + "s", sing[:-2] + "eis"}
+    elif sing[-1] in "rzs":
+        formas.add(sing + "es")
+    elif sing[-1] in "aeiouáéíóúâêôãõà":
+        formas.add(sing + "s")
+    return formas
+
+
+def chave_singular(termo):
+    """Chave para identificar termos que só diferem em singular/plural."""
+    return " ".join(singular(p) for p in re.findall(r"\w+", termo.lower()))
+
+
+def padrao_termo(termo):
+    """Regex que encontra o termo como palavras inteiras, no singular ou plural."""
+    partes = re.split(r"(\w+)", termo.lower())
+    regex = []
+    for i, parte in enumerate(partes):
+        if i % 2:  # palavra
+            formas = sorted(variacoes(parte), key=len, reverse=True)
+            regex.append("(?:" + "|".join(re.escape(f) for f in formas) + ")")
+        elif parte and i not in (0, len(partes) - 1):  # separador entre palavras
+            pontuacao = re.escape(parte.strip())
+            # hífens/travessões e aspas retas/curvas são equivalentes
+            pontuacao = re.sub(r"[-–—]", "[-–—]", pontuacao.replace("\\-", "-"))
+            pontuacao = re.sub(r"[\"“”]", "[\"“”]", pontuacao)
+            regex.append(r"\s*" + pontuacao + r"\s*" if pontuacao else r"\s+")
+    return re.compile(r"(?<!\w)" + "".join(regex) + r"(?!\w)")
+
+
 def _generalizar_criterios(criterios):
     resultado = {}
     for categoria, termos in criterios.items():
         vistos, lista = set(), []
         for termo in map(generalizar_estados, termos):
-            if termo.lower() not in vistos:
-                vistos.add(termo.lower())
+            chave = chave_singular(termo)
+            if chave not in vistos:
+                vistos.add(chave)
                 lista.append(termo)
         resultado[categoria] = lista
     return resultado

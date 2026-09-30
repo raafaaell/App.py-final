@@ -5,17 +5,18 @@ from pypdf import PdfReader
 import io
 import re
 
-from criterios import CRITERIOS_DIRETOS
+from criterios import CRITERIOS_DIRETOS, padrao_termo
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Codificador de Instrumentos", layout="wide")
 
 # O SEU DICIONÁRIO DE CRITÉRIOS (ver criterios.py)
 
-def processar_texto_multiplas_categorias(texto, nome_arquivo):
-   """Sua lógica original de análise adaptada para o Streamlit"""
+def processar_texto_multiplas_categorias(paginas, nome_arquivo):
+   """Procura cada termo página a página, como palavra inteira e no singular ou plural.
+   O termo conta uma vez por arquivo, com a lista das páginas em que aparece."""
    # Normaliza quebras de linha e espaços do PDF para que termos longos sejam encontrados
-   texto = re.sub(r"\s+", " ", texto).lower()
+   paginas = [re.sub(r"\s+", " ", texto).lower() for texto in paginas]
    registros = []
   
    for chave_categoria, palavras in CRITERIOS_DIRETOS.items():
@@ -26,14 +27,21 @@ def processar_texto_multiplas_categorias(texto, nome_arquivo):
            condicao, subcategoria = chave_categoria, "Geral"
 
        for palavra in palavras:
-           contagem = texto.count(palavra.lower())
-           if contagem > 0:
+           padrao = padrao_termo(palavra)
+           paginas_com_termo, formas_encontradas = [], set()
+           for num, texto in enumerate(paginas, start=1):
+               achados = {m.group(0) for m in padrao.finditer(texto)}
+               if achados:
+                   paginas_com_termo.append(num)
+                   formas_encontradas |= achados
+           if paginas_com_termo:
                registros.append({
                    "Arquivo": nome_arquivo,
                    "Condição": condicao.capitalize(),  
                    "Categoria": subcategoria.capitalize(),
                    "Termo Encontrado": palavra,
-                   "Contagem": contagem
+                   "Páginas": ", ".join(str(num) for num in paginas_com_termo),
+                   "Formas Encontradas": ", ".join(sorted(formas_encontradas))
                })
    return registros
 
@@ -91,9 +99,10 @@ if uploaded_files:
        for i, uploaded_file in enumerate(uploaded_files):
            try:
                reader = PdfReader(uploaded_file)
-               texto = " ".join([p.extract_text() for p in reader.pages if p.extract_text()])
+               # Mantém uma entrada por página (mesmo vazia) para a numeração bater com o PDF
+               paginas = [p.extract_text() or "" for p in reader.pages]
               
-               dados = processar_texto_multiplas_categorias(texto, uploaded_file.name)
+               dados = processar_texto_multiplas_categorias(paginas, uploaded_file.name)
                if dados:
                    resultados_gerais.extend(dados)
               
