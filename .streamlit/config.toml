@@ -1,0 +1,8 @@
+[theme]
+base = "light"
+# Tons terrosos: terracota (destaque), areia (fundos) e marrom escuro (texto)
+primaryColor = "#b5582f"
+backgroundColor = "#faf6ef"
+secondaryBackgroundColor = "#f0e6d6"
+textColor = "#2f2a22"
+font = "sans serif"
