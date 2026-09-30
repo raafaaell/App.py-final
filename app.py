@@ -48,15 +48,17 @@ def processar_texto_multiplas_categorias(paginas, nome_arquivo):
    return registros
 
 # --- GRÁFICOS ---
-# Paleta validada para daltonismo e contraste (skill dataviz); o texto nunca usa a cor da série.
-CORES_CLASSE = {"Substantivo": "#2a78d6", "Procedimental": "#eb6834"}
-COR_BARRA = "#2a78d6"
-RAMPA_AZUL = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+# Paleta em tons terrosos, validada para daltonismo e contraste (skill dataviz);
+# o texto nunca usa a cor da série.
+CORES_CLASSE = {"Substantivo": "#4a650c", "Procedimental": "#d27543"}  # verde oliva · terracota
+COR_BARRA = "#a8692c"  # damasco queimado
+# Areia -> pêssego -> damasco -> terracota -> marrom (mais escuro = mais termos)
+RAMPA_TERROSA = ["#f5e3cf", "#f0c9a6", "#eaab7e", "#e08c59", "#d27543", "#a95631", "#733820"]
 ORDEM_TIPOS = ["Nodalidade", "Autoridade", "Tesouro", "Organização"]
-COR_TEXTO = "#0b0b0b"
-COR_TEXTO_SECUNDARIO = "#52514e"
-COR_GRADE = "#e6e5e0"
-COR_FUNDO = "#fcfcfb"
+COR_TEXTO = "#2f2a22"
+COR_TEXTO_SECUNDARIO = "#6b5f50"
+COR_GRADE = "#e8dfd0"
+COR_FUNDO = "#faf6ef"
 FONTE = '"Source Sans", "Source Sans Pro", sans-serif'
 
 def estilizar(grafico):
@@ -143,12 +145,12 @@ def grafico_mapa_calor(resumo_cruzado):
                 alt.Tooltip("Quantidade:Q", title="Termos")],
    )
    celulas = base.mark_rect(cornerRadius=4, stroke=COR_FUNDO, strokeWidth=2).encode(
-       color=alt.Color("Quantidade:Q", scale=alt.Scale(domain=[0, maximo], range=RAMPA_AZUL), legend=None),
+       color=alt.Color("Quantidade:Q", scale=alt.Scale(domain=[0, maximo], range=RAMPA_TERROSA), legend=None),
    )
    # Texto branco nas células escuras e preto nas claras, para manter o contraste
    rotulos = base.mark_text(fontSize=16, fontWeight=600).encode(
        text="Quantidade:Q",
-       color=alt.condition(alt.datum.Quantidade > maximo * 0.5, alt.value("#ffffff"), alt.value(COR_TEXTO)),
+       color=alt.condition(alt.datum.Quantidade > maximo * 0.7, alt.value("#ffffff"), alt.value(COR_TEXTO)),
    )
    return estilizar((celulas + rotulos).properties(
        title=alt.Title("Mapa de calor", subtitle="Mais escuro = mais termos"), height=alt.Step(64)))
@@ -230,6 +232,7 @@ def mostrar_resultados(df):
        file_name="Relatorio_Codificacao_Instrumentos.xlsx",
        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
        type="primary",
+       on_click="ignore",  # baixar o arquivo não recarrega a página
    )
 
 # --- INTERFACE VISUAL ---
@@ -244,6 +247,11 @@ with st.container(border=True):
 uploaded_files = st.file_uploader("Suba seus arquivos PDF aqui", type="pdf", accept_multiple_files=True)
 
 if uploaded_files:
+   # Se os arquivos mudarem, o resultado anterior deixa de valer
+   assinatura = tuple((f.name, f.size) for f in uploaded_files)
+   if st.session_state.get("assinatura") != assinatura:
+       st.session_state.pop("resultados", None)
+
    if st.button("Iniciar Análise", type="primary", icon=":material/play_arrow:"):
        resultados_gerais = []
       
@@ -267,9 +275,16 @@ if uploaded_files:
 
        progresso.empty()
 
-       # --- EXIBIÇÃO DOS RESULTADOS ---
-       if resultados_gerais:
+       # Guarda o resultado na sessão para ele continuar na tela depois do download
+       st.session_state["assinatura"] = assinatura
+       st.session_state["resultados"] = pd.DataFrame(resultados_gerais)
+
+   # --- EXIBIÇÃO DOS RESULTADOS ---
+   if "resultados" in st.session_state:
+       if not st.session_state["resultados"].empty:
            st.divider()
-           mostrar_resultados(pd.DataFrame(resultados_gerais))
+           mostrar_resultados(st.session_state["resultados"])
        else:
            st.warning("Nenhum termo dos critérios foi encontrado nos arquivos enviados.")
+else:
+   st.session_state.pop("resultados", None)
