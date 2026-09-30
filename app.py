@@ -4,7 +4,7 @@ from pypdf import PdfReader
 import io
 import re
 
-from criterios import CRITERIOS_DIRETOS
+from criterios import CRITERIOS_DIRETOS, padrao_termo
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Codificador de Instrumentos", layout="wide")
@@ -12,8 +12,8 @@ st.set_page_config(page_title="Codificador de Instrumentos", layout="wide")
 # O SEU DICIONÁRIO DE CRITÉRIOS (ver criterios.py)
 
 def processar_texto_multiplas_categorias(paginas, nome_arquivo):
-   """Procura cada termo página a página: o termo conta uma vez por arquivo,
-   com a lista das páginas em que aparece."""
+   """Procura cada termo página a página, como palavra inteira e no singular ou plural.
+   O termo conta uma vez por arquivo, com a lista das páginas em que aparece."""
    # Normaliza quebras de linha e espaços do PDF para que termos longos sejam encontrados
    paginas = [re.sub(r"\s+", " ", texto).lower() for texto in paginas]
    registros = []
@@ -26,15 +26,21 @@ def processar_texto_multiplas_categorias(paginas, nome_arquivo):
            condicao, subcategoria = chave_categoria, "Geral"
 
        for palavra in palavras:
-           termo = palavra.lower()
-           paginas_com_termo = [num for num, texto in enumerate(paginas, start=1) if termo in texto]
+           padrao = padrao_termo(palavra)
+           paginas_com_termo, formas_encontradas = [], set()
+           for num, texto in enumerate(paginas, start=1):
+               achados = {m.group(0) for m in padrao.finditer(texto)}
+               if achados:
+                   paginas_com_termo.append(num)
+                   formas_encontradas |= achados
            if paginas_com_termo:
                registros.append({
                    "Arquivo": nome_arquivo,
                    "Condição": condicao.capitalize(),  
                    "Categoria": subcategoria.capitalize(),
                    "Termo Encontrado": palavra,
-                   "Páginas": ", ".join(str(num) for num in paginas_com_termo)
+                   "Páginas": ", ".join(str(num) for num in paginas_com_termo),
+                   "Formas Encontradas": ", ".join(sorted(formas_encontradas))
                })
    return registros
 
