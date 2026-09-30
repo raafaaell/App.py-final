@@ -1,8 +1,8 @@
 import streamlit as st
+import altair as alt
 import pandas as pd
 from pypdf import PdfReader
 import io
-import altair as alt
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Codificador de Instrumentos", layout="wide")
