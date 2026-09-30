@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from pypdf import PdfReader
 import io
+import altair as alt
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Codificador de Instrumentos", layout="wide")
@@ -41,6 +42,39 @@ def processar_texto_multiplas_categorias(texto, nome_arquivo):
                    "Contagem": contagem
                })
    return registros
+
+# --- GRÁFICOS ---
+COR_BARRA = "#2a78d6"
+CORES_CLASSE = {"Substantivo": "#2a78d6", "Procedimental": "#eb6834"}
+
+def grafico_barras(resumo, campo, titulo):
+   """Gráfico de barras horizontais com o total de cada valor de `campo`."""
+   base = alt.Chart(resumo).encode(
+       y=alt.Y(f"{campo}:N", sort="-x", title=None),
+       x=alt.X("Total:Q", title="Termos identificados"),
+       tooltip=[alt.Tooltip(f"{campo}:N"), alt.Tooltip("Total:Q")],
+   )
+   barras = base.mark_bar(color=COR_BARRA, cornerRadiusEnd=4, size=22)
+   rotulos = base.mark_text(align="left", dx=4).encode(text="Total:Q")
+   return (barras + rotulos).properties(title=titulo, height=alt.Step(34))
+
+def grafico_cruzado(resumo_cruzado):
+   """Barras agrupadas: tipos no eixo X, uma barra por classe em cada tipo."""
+   base = alt.Chart(resumo_cruzado).encode(
+       x=alt.X("Categoria:N", title="Tipo", axis=alt.Axis(labelAngle=0)),
+       xOffset=alt.XOffset("Condição:N", sort=list(CORES_CLASSE)),
+       y=alt.Y("Quantidade:Q", title="Termos identificados"),
+       tooltip=[alt.Tooltip("Condição:N", title="Classe"),
+                alt.Tooltip("Categoria:N", title="Tipo"),
+                alt.Tooltip("Quantidade:Q")],
+   )
+   barras = base.mark_bar(cornerRadiusEnd=4, stroke="white", strokeWidth=2).encode(
+       color=alt.Color("Condição:N", title="Classe",
+                       scale=alt.Scale(domain=list(CORES_CLASSE), range=list(CORES_CLASSE.values())),
+                       legend=alt.Legend(orient="top")),
+   )
+   rotulos = base.mark_text(dy=-6).encode(text="Quantidade:Q")
+   return (barras + rotulos).properties(title="Classes × Tipos", height=320)
 
 # --- INTERFACE VISUAL ---
 st.title("Codificador de Instrumentos")
@@ -107,6 +141,18 @@ if uploaded_files:
            with col3:
                st.subheader("Cruzamento")
                st.dataframe(resumo_cruzado, use_container_width=True, hide_index=True)
+
+           # --- GRÁFICOS ---
+           st.divider()
+           st.subheader("📊 Gráficos")
+
+           graf1, graf2 = st.columns(2)
+           with graf1:
+               st.altair_chart(grafico_barras(resumo_condicao, "Condição", "Por Classe"), use_container_width=True)
+           with graf2:
+               st.altair_chart(grafico_barras(resumo_categoria, "Tipo (Categoria)", "Por Tipo"), use_container_width=True)
+
+           st.altair_chart(grafico_cruzado(resumo_cruzado), use_container_width=True)
 
            # --- DOWNLOAD DO EXCEL ---
            st.divider()
