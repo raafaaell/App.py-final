@@ -2,25 +2,19 @@ import streamlit as st
 import pandas as pd
 from pypdf import PdfReader
 import io
+import re
+
+from criterios import CRITERIOS_DIRETOS
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Codificador de Instrumentos", layout="wide")
 
-# O SEU DICIONÁRIO DE CRITÉRIOS
-CRITERIOS_DIRETOS = {
-   "Substantivo e nodalidade": ["transparência", "acesso à informação", "dados abertos", "princípio da publicidade", "sigilo"],
-   "Substantivo e autoridade": ["poder de polícia", "competência legal", "hierarquia", "ordem pública", "soberania", "lei"],
-   "Substantivo e tesouro": ["transferência", "taxas", "multa", "receita pública", "crédito suplementar"],
-   "Substantivo e organização": ["estrutura administrativa", "personalidade jurídica", "organograma", "cargos e funções"],
-   "Procedimental e nodalidade": ["Auditorias externas independentes", "Avaliação de impacto ambiental", "Etnomapeamento", "Monitoramento das emissões"],
-   "Procedimental e autoridade": ["Cadastro de empreendimentos", "Inventário", "Licitação sustentavel", "Sistema de registro", "Avaliação Ambiental Estratégica"],
-   "Procedimental e tesouro": ["dotação orçamentária"],
-   "Procedimental e organização": ["Comissão Estadual de Validação", "Comitê Científico", "Coletivo de conselhos", "Comitê Técnico-Científico", "Conselho Estadual de Meio Ambiente", "Fórum Amapaense de Mudanças Climáticas", "Núcleo de Adaptação", "Fórum Amazonense de Mudanças Climáticas", "Comitê Gestor", "Conselho Estadual de Recursos Hídricos", "Criação de centros de inovação", "Fórum Paraense", "Fóruns Municipais", "Painel científico"],
-}
+# O SEU DICIONÁRIO DE CRITÉRIOS (ver criterios.py)
 
 def processar_texto_multiplas_categorias(texto, nome_arquivo):
    """Sua lógica original de análise adaptada para o Streamlit"""
-   texto = texto.lower()
+   # Normaliza quebras de linha e espaços do PDF para que termos longos sejam encontrados
+   texto = re.sub(r"\s+", " ", texto).lower()
    registros = []
   
    for chave_categoria, palavras in CRITERIOS_DIRETOS.items():
@@ -63,7 +57,7 @@ if uploaded_files:
        for i, uploaded_file in enumerate(uploaded_files):
            try:
                reader = PdfReader(uploaded_file)
-               texto = "".join([p.extract_text() for p in reader.pages if p.extract_text()])
+               texto = " ".join([p.extract_text() for p in reader.pages if p.extract_text()])
               
                dados = processar_texto_multiplas_categorias(texto, uploaded_file.name)
                if dados:
