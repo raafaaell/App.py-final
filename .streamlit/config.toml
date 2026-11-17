@@ -1,8 +1,9 @@
 [theme]
 base = "light"
-# Tons terrosos: terracota (destaque), areia (fundos) e marrom escuro (texto)
+# Fundo branco para destacar os dados; tons terrosos no destaque (terracota),
+# nos campos e cartões (areia) e no texto (marrom escuro)
 primaryColor = "#b5582f"
-backgroundColor = "#faf6ef"
+backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#f0e6d6"
 textColor = "#2f2a22"
 font = "sans serif"
