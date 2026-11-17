@@ -58,7 +58,7 @@ ORDEM_TIPOS = ["Nodalidade", "Autoridade", "Tesouro", "Organização"]
 COR_TEXTO = "#2f2a22"
 COR_TEXTO_SECUNDARIO = "#6b5f50"
 COR_GRADE = "#e8dfd0"
-COR_FUNDO = "#faf6ef"
+COR_FUNDO = "#ffffff"
 FONTE = '"Source Sans", "Source Sans Pro", sans-serif'
 
 def estilizar(grafico):
